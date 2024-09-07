@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    volumes:
+      - /app/node_modules
+    environment:
+      - PORT=${PORT}
+      - MONGO_URL=${MONGO_URL}
+    networks:
+      - caregiver-app
+  mongo:
+    container_name: mongo
+    image: mongo:4.4
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - caregiver-app
+volumes:
+  mongodb_data: {}
+networks:
+  caregiver-app:
