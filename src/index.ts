@@ -1,19 +1,31 @@
+import 'reflect-metadata';
 import express from 'express';
-import 'dotenv/config';
-import * as mongoose from 'mongoose';
+
+import cors from 'cors';
+import morgan from 'morgan';
+import { AppDataSource } from './appDataSource';
+import {
+  DB_PORT,
+  POSTGRES_DB,
+  POSTGRES_PASSWORD,
+  POSTGRES_USER,
+  PORT,
+} from './constants';
 
 const app = express();
-const port = process.env.PORT || 5000;
+
 app.use(express.json());
+app.use(cors({ origin: '*', credentials: true }));
 
-const mongoUrl =
-  process.env.MONGO_URL || 'mongodb://localhost:27017/caregiversdb';
+// export const DB_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_PORT}/${POSTGRES_DB}?schema=public`;
 
-mongoose
-  .connect(mongoUrl)
-  .then(() => console.log('Mongodb Connected'))
-  .catch((err) => console.log('MongoDB connection error: ', err));
-
-app.listen(port, () => {
-  console.log(`Server running at ${port}`);
-});
+AppDataSource.initialize()
+  .then(() => {
+    console.log(`Datasource initilized`);
+    app.listen(PORT as string, () => {
+      console.log(`Server running on PORT ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.log('Error during Data source initialization', err);
+  });

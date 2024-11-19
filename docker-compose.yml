@@ -1,28 +1,46 @@
 version: '3.8'
+
 services:
-  api:
+  app:
+    image: caregiver_app:latest
+    container_name: caregiver_app
     build: .
     ports:
-      - "5000:5000"
-    depends_on:
-      - mongo
-    volumes:
-      - /app/node_modules
+      - '${PORT}:${DOCKER_PORT}'
     environment:
-      - PORT=${PORT}
-      - MONGO_URL=${MONGO_URL}
+      PORT: ${PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DB_HOST: db
+    depends_on:
+      - db
+    env_file:
+      - .env
     networks:
-      - caregiver-app
-  mongo:
-    container_name: mongo
-    image: mongo:4.4
+      - caregiver_network
+
+  db:
+    image: postgres:14-alpine
+    # container_name: caregiver_db
+    restart: always
     ports:
-      - "27017:27017"
+      - 5434:5434
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGPORT: 5434
+    env_file:
+      - .env
     volumes:
-      - mongodb_data:/data/db
+      - db-data:/var/lib/postgresql/data
     networks:
-      - caregiver-app
+      - caregiver_network
+    expose:
+      - 5434
 volumes:
-  mongodb_data: {}
+  db-data:
 networks:
-  caregiver-app:
+  caregiver_network:
+    driver: bridge
