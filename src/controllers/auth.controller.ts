@@ -1,5 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
-import { forgotSchema, loginSchema, registrationSchema } from '../schemas/user';
+import {
+  forgotSchema,
+  loginSchema,
+  registrationSchema,
+  resetPasswordSchema,
+} from '../schemas/user';
 import { CustomError } from '../types';
 import { User } from '../entities/user.entity';
 import {
@@ -8,6 +13,7 @@ import {
   refreshToken,
   signIn,
   signUp,
+  setNewPassword,
 } from '../services/auth.service';
 import argon2 from 'argon2';
 
@@ -142,6 +148,33 @@ export const forgot = async (
     const data = await forgotPassword(email);
 
     res.status(200).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body;
+    const { error: validationError } = resetPasswordSchema.validate(body);
+
+    if (validationError) {
+      const error = new CustomError(validationError.details[0].message, 422);
+      return next(error);
+    }
+
+    const { token, password, passwordConfirm } = body;
+
+    if (password !== passwordConfirm) {
+      throw new CustomError('Passwords do not match', 404);
+    }
+
+    const data = await setNewPassword(token, password);
+    res.status(201).json(data);
   } catch (error) {
     next(error);
   }

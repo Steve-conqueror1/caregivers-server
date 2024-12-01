@@ -1,6 +1,7 @@
 import { verify } from 'argon2';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
+import argon2 from 'argon2';
 import { CustomError, UserType, Auth } from '../types';
 
 import { AppDataSource } from '../data-source';
@@ -12,7 +13,7 @@ import {
   JWT_SECRET,
   REFRESH_SECRET,
 } from '../constants';
-import { encrypt } from '../utils';
+import { decrypt, encrypt } from '../utils';
 import { resetPassword } from '../emailTemplates/resetPassword';
 
 const userRepository = AppDataSource.getRepository(User);
@@ -113,4 +114,29 @@ export const forgotPassword = async (email: string) => {
     });
 
   return { message: 'Instructions to reset your password send to your email' };
+};
+
+export const setNewPassword = async (
+  confirmationHash: string,
+  password: string
+) => {
+  const confirmationToken = decrypt(confirmationHash);
+  const decoded = jwt.verify(confirmationToken, JWT_SECRET!);
+
+  const { email } = decoded as { email: string };
+  const hashedPassword = await argon2.hash(password);
+
+  const userToUpdate = await userRepository.findOne({
+    where: {
+      email,
+    },
+  });
+  if (!userToUpdate) {
+    throw new CustomError('User not found', 404);
+  }
+  userToUpdate.password = hashedPassword;
+
+  await userRepository.save(userToUpdate);
+
+  return { message: 'Password reset successful' };
 };

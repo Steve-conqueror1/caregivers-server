@@ -27,3 +27,13 @@ export const userSchema = Joi.object({
 export const forgotSchema = Joi.object({
   email: Joi.string().email().required(),
 });
+
+export const resetPasswordSchema = Joi.object({
+  token: Joi.string().required().label('token'),
+  password: Joi.string().min(6).required().label('Password'),
+  passwordConfirm: Joi.any()
+    .valid(Joi.ref('password'))
+    .required()
+    .messages({ 'any.only': "Password's do not match" })
+    .label('Password Confirmation'),
+});
