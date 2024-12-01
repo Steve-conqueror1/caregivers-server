@@ -3,21 +3,26 @@ import express from 'express';
 
 import cors from 'cors';
 import morgan from 'morgan';
-import { AppDataSource } from './appDataSource';
-import {
-  DB_PORT,
-  POSTGRES_DB,
-  POSTGRES_PASSWORD,
-  POSTGRES_USER,
-  PORT,
-} from './constants';
+import cookieParser from 'cookie-parser';
+import { AppDataSource } from './data-source';
+import { PORT } from './constants';
+
+import authRouter from './routes/auth';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cookieParser());
+app.use(cors({ origin: ['http://localhost:3000'], credentials: true }));
 
-// export const DB_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_PORT}/${POSTGRES_DB}?schema=public`;
+// Logger
+app.use(morgan('dev'));
+
+app.use('/api/v1', authRouter);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 AppDataSource.initialize()
   .then(() => {

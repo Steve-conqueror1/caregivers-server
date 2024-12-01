@@ -14,14 +14,14 @@ const isProduction = NODE_ENV === 'production';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: 'db',
+  host: DB_HOST,
   port: parseInt(DB_PORT || '5434'),
   username: POSTGRES_USER,
   password: POSTGRES_PASSWORD,
   database: POSTGRES_DB,
-  entities: [__dirname + '/entity/*.ts'],
-  migrations: ['src/migration/**/*.ts'],
+  entities: ['src/entities/**/*.ts'],
+  migrations: ['src/migrations/**/*.ts'],
   synchronize: SYNC,
   logging: SYNC,
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  ssl:isProduction ? { rejectUnauthorized: false } : false,
 });
